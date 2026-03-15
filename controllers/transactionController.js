@@ -51,6 +51,16 @@ const updateTransaction = async (req, res) => {
     return res.status(401).json({ message: 'User not authorized' });
   }
 
+  // Restrict editing to current month only
+  const now = new Date();
+  const transactionDate = new Date(transaction.date);
+  if (
+    transactionDate.getMonth() !== now.getMonth() ||
+    transactionDate.getFullYear() !== now.getFullYear()
+  ) {
+    return res.status(403).json({ message: 'Past transactions cannot be edited' });
+  }
+
   const updatedTransaction = await Transaction.findByIdAndUpdate(
     req.params.id,
     req.body,
@@ -80,6 +90,16 @@ const deleteTransaction = async (req, res) => {
   // Make sure the logged in user matches the transaction user
   if (transaction.user.toString() !== req.user.id) {
     return res.status(401).json({ message: 'User not authorized' });
+  }
+
+  // Restrict deleting to current month only
+  const now = new Date();
+  const transactionDate = new Date(transaction.date);
+  if (
+    transactionDate.getMonth() !== now.getMonth() ||
+    transactionDate.getFullYear() !== now.getFullYear()
+  ) {
+    return res.status(403).json({ message: 'Past transactions cannot be deleted' });
   }
 
   await transaction.deleteOne();
